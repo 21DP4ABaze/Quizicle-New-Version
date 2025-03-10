@@ -91,44 +91,6 @@ class QuizCreateView(CreateView):
 
         return redirect(self.success_url)
 # View to add questions and answers dynamically inside the Quiz creation page
-@login_required
-def create_quiz_with_questions(request, quiz_id):
-    quiz = get_object_or_404(Quiz, id=quiz_id)
-
-    if request.method == 'POST':
-        question_form = QuestionForm(request.POST)
-        answer_form = AnswerForm(request.POST)
-
-        if question_form.is_valid():
-            question = question_form.save(commit=False)
-            question.Quiz = quiz
-            question.save()
-
-            # Save multiple answers for the question
-            answers = request.POST.getlist('answers[]')
-            correct_answers = request.POST.getlist('correct_answers[]')
-
-            for idx, answer_text in enumerate(answers):
-                is_correct = str(idx) in correct_answers
-                Answer.objects.create(Question=question, Answer=answer_text, Correct=is_correct)
-
-            # Update quiz max points and question count
-            quiz.QuizMaximumPoints = sum(q.PointsForQuestion for q in quiz.question_set.all())
-            quiz.QuestionCount = quiz.question_set.count()
-            quiz.save()
-
-            return redirect('create_quiz_with_questions', quiz_id=quiz.id)
-
-    else:
-        question_form = QuestionForm()
-        answer_form = AnswerForm()
-
-    return render(request, 'create_quiz_questions.html', {
-        'quiz': quiz,
-        'question_form': question_form,
-        'answer_form': answer_form,
-    })
-
 # List of quizzes
 class QuizListView(ListView):
     model = Quiz
