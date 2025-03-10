@@ -1,0 +1,9 @@
+<h1>Edit Quiz: {{ quiz.QuizName }}</h1>
+
+<h2>Questions:</h2>
+{% for question in quiz.question_set.all %}
+    <p>{{ question.Description }}</p>
+    <a href="{% url 'add_answer' question.id %}">Add Answer</a>
+{% endfor %}
+
+<a href="{% url 'add_question' quiz.id %}">Add New Question</a>
