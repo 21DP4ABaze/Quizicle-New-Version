@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 {% extends 'base.html' %}
 {% load i18n %}
 {% block title %}{% trans "Well Done!" %}{% endblock %}
@@ -20,4 +21,28 @@
             </div>
         </div>
     </div>
+=======
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% trans "Well Done!" %}{% endblock %}
+
+{% block content %}
+    <div class="text-center">
+        <h1>{% trans "Well Done" %}, {{ user.username }}!</h1>
+        <p>{% trans "You have successfully logged in."%}</p>
+
+        <div class="mt-4">
+            <a href="{% url 'quiz_list' %}" class="btn btn-primary">{% trans "Go to Quiz List"%}</a>
+            <a href="{% url 'create_quiz' %}" class="btn btn-success">{% trans "Create a New Quiz"%}</a>
+            <div class="btn btn-succes">
+                {% if user.is_authenticated %}
+                    <form action="{% url 'logout' %}" method="post">
+                        {% csrf_token %}
+                        <button class="btn btn-danger" type="submit">Logout</button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+>>>>>>> 1aa76192b204e63c9c4fe886ce418540db6ba48e
 {% endblock %}

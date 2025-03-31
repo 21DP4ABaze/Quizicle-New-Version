@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 {% extends 'base.html' %}
 {% load i18n %}
 {% block title %}{% trans "Home" %}{% endblock %}
@@ -10,3 +11,17 @@
     </div>
 {% endblock %}
 
+=======
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% trans "Home" %}{% endblock %}
+{% block content %}
+    <div class="container text-center mt-5">
+        <h1>{% trans "Welcome to My Website" %}</h1>
+        <p>{% trans "Please log in or register to continue." %}</p>
+        <a href="{% url 'login' %}" class="btn btn-primary">{% trans "Login" %}</a>
+        <a href="{% url 'register' %}" class="btn btn-success">{% trans "Register" %}</a>
+    </div>
+{% endblock %}
+
+>>>>>>> 1aa76192b204e63c9c4fe886ce418540db6ba48e

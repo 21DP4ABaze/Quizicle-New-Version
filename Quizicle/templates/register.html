@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!-- register.html -->
 {% extends 'base.html' %}
 {% load i18n %}
@@ -11,4 +12,19 @@
         <button type="submit" class="btn btn-primary">{% trans "Register" %}</button>
     </form>
     <p>Already have an account? <a href="{% url 'login' %}">{% trans "Login here" %}</a>.</p>
+=======
+<!-- register.html -->
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% trans "Register" %}{% endblock %}
+
+{% block content %}
+    <h1>Register</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">{% trans "Register" %}</button>
+    </form>
+    <p>Already have an account? <a href="{% url 'login' %}">{% trans "Login here" %}</a>.</p>
+>>>>>>> 1aa76192b204e63c9c4fe886ce418540db6ba48e
 {% endblock %}
