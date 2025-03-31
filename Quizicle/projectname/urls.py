@@ -23,6 +23,7 @@ from django.contrib.auth.views import LogoutView
 from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
+from .views import custom_login_view
 
 
 
@@ -30,7 +31,7 @@ urlpatterns = [
     # Authentication URLs
     path('', views.home, name='home'),
     path('register/', views.register, name='register'),
-    path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
+    path('login/', custom_login_view, name='login'),
     path('logout/', LogoutView.as_view(), name='logout'),
     path('admin/', admin.site.urls),  
 

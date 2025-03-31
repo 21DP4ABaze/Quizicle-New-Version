@@ -7,9 +7,12 @@ from django.views.generic import CreateView, ListView, DetailView, FormView
 from django.utils.decorators import method_decorator
 from django.db.models import Max
 from .models import Quiz, Question, Answer, Results
-from .forms import QuizForm, QuestionForm, AnswerForm
+from .forms import QuizForm, QuestionForm
 from django.http import JsonResponse
 from django.core.files.storage import default_storage
+from django.contrib.auth.mixins import LoginRequiredMixin
+from .forms import CustomLoginForm
+from django.contrib.auth import authenticate, login
 
 # Registration view
 def register(request):
@@ -42,7 +45,9 @@ class QuizCreateView(CreateView):
     success_url = reverse_lazy('quiz_list')
 
     def form_valid(self, form):
-        quiz = form.save()
+        quiz = form.save(commit=False)
+        quiz.creator = self.request.user
+        quiz.save()
 
         # Get question data from POST
         questions = self.request.POST.getlist('questions[]')
@@ -61,10 +66,10 @@ class QuizCreateView(CreateView):
                 additional_image = question_images[q_index] if q_index < len(question_images) else None
 
                 question = Question.objects.create(
-                    Quiz=quiz,
-                    Description=question_text.strip(),
-                    PointsForQuestion=int(points[q_index]),
-                    AdditionalImage=additional_image  # Save the image
+                    quiz=quiz,
+                    description=question_text.strip(),
+                    points_for_question=int(points[q_index]),
+                    image=additional_image,  # Save the image
                 )
 
                 # Get answers for this specific question
@@ -91,53 +96,24 @@ class QuizCreateView(CreateView):
 
         return redirect(self.success_url)
 # View to add questions and answers dynamically inside the Quiz creation page
-@login_required
-def create_quiz_with_questions(request, quiz_id):
-    quiz = get_object_or_404(Quiz, id=quiz_id)
 
-    if request.method == 'POST':
-        question_form = QuestionForm(request.POST)
-        answer_form = AnswerForm(request.POST)
-
-        if question_form.is_valid():
-            question = question_form.save(commit=False)
-            question.Quiz = quiz
-            question.save()
-
-            # Save multiple answers for the question
-            answers = request.POST.getlist('answers[]')
-            correct_answers = request.POST.getlist('correct_answers[]')
-
-            for idx, answer_text in enumerate(answers):
-                is_correct = str(idx) in correct_answers
-                Answer.objects.create(Question=question, Answer=answer_text, Correct=is_correct)
-
-            # Update quiz max points and question count
-            quiz.QuizMaximumPoints = sum(q.PointsForQuestion for q in quiz.question_set.all())
-            quiz.QuestionCount = quiz.question_set.count()
-            quiz.save()
-
-            return redirect('create_quiz_with_questions', quiz_id=quiz.id)
-
-    else:
-        question_form = QuestionForm()
-        answer_form = AnswerForm()
-
-    return render(request, 'create_quiz_questions.html', {
-        'quiz': quiz,
-        'question_form': question_form,
-        'answer_form': answer_form,
-    })
 
 # List of quizzes
-class QuizListView(ListView):
+class QuizListView(LoginRequiredMixin, ListView):
     model = Quiz
     template_name = 'quiz_list.html'
     context_object_name = 'quizzes'
 
     def get_queryset(self):
         query = self.request.GET.get('q', '')
-        return Quiz.objects.filter(QuizName__icontains=query) if query else Quiz.objects.all()
+        user = self.request.user
+
+        queryset = Quiz.objects.filter(creator=user)
+        
+        if query:
+            queryset = queryset.filter(QuizName__icontains=query)
+        
+        return queryset
 
 # Take a quiz and submit answers
 @method_decorator(login_required, name='dispatch')
@@ -165,7 +141,7 @@ class TakeQuizView(DetailView):
             if selected_answer_id:
                 selected_answer = Answer.objects.get(id=selected_answer_id)
                 if selected_answer.Correct:
-                    score += question.PointsForQuestion
+                    score += question.points_for_question
 
         return redirect('quiz_result', quiz_id=quiz.id, score=score)
 
@@ -211,3 +187,23 @@ def search_quizzes(request):
     }
     return JsonResponse(data)
 
+def custom_login_view(request):
+    if request.method == 'POST':
+        form = CustomLoginForm(request.POST)
+        
+        if form.is_valid():
+            username = form.cleaned_data['username']
+            password = form.cleaned_data['password']
+            
+            user = authenticate(request, username=username, password=password)
+            
+            if user is not None:
+                login(request, user)
+                messages.success(request, f'Welcome back, {user.username}!')
+                return redirect('quiz_list')  # Redirect to your quiz list or dashboard
+            else:
+                messages.error(request, 'Invalid username or password')
+    else:
+        form = CustomLoginForm()
+
+    return render(request, 'login.html', {'form': form})

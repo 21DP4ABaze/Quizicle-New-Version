@@ -5,9 +5,9 @@ from .models import Quiz, Question, Answer, Results
 class QuizForm(forms.ModelForm):
     class Meta:
         model = Quiz
-        fields = ['QuizName']
-        labels = {'QuizName': 'Quiz Name'}
-        widgets = {'QuizName': forms.TextInput(attrs={'class': 'form-control'})}
+        fields = ['quiz_name']
+        labels = {'quiz_name': 'Quiz Name'}
+        widgets = {'quiz_name': forms.TextInput(attrs={'class': 'form-control'})}
 
     def save(self, commit=True):
         """Overrides save to update max points & question count after quiz creation"""
@@ -21,16 +21,16 @@ class QuizForm(forms.ModelForm):
 class QuestionForm(forms.ModelForm):
     class Meta:
         model = Question
-        fields = ['Description', 'PointsForQuestion', 'AdditionalImage']
+        fields = ['description', 'points_for_question', 'image']
         labels = {
-            'Description': 'Question Text',
-            'PointsForQuestion': 'Points for Question',
-            'AdditionalImage': 'Optional Image'
+            'description': 'Question Text',
+            'points_for_question': 'Points for Question',
+            'image': 'Optional Image'
         }
         widgets = {
-            'Description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'PointsForQuestion': forms.NumberInput(attrs={'class': 'form-control'}),
-            'AdditionalImage': forms.ClearableFileInput(attrs={'class': 'form-control'})
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'points_for_question': forms.NumberInput(attrs={'class': 'form-control'}),
+            'image': forms.ClearableFileInput(attrs={'class': 'form-control'})
         }
 
     def save(self, commit=True):
@@ -38,7 +38,7 @@ class QuestionForm(forms.ModelForm):
         question = super().save(commit=False)
         if commit:
             question.save()
-            question.Quiz.calculate_max_values()  # Auto-update quiz stats
+            question.quiz.calculate_max_values()  # Auto-update quiz stats
         return question
 
 # Form for adding Answers to a Question
@@ -70,3 +70,14 @@ class ResultsForm(forms.ModelForm):
             'User': forms.TextInput(attrs={'class': 'form-control'}),
             'Result': forms.NumberInput(attrs={'class': 'form-control'}),
         }
+
+# forms.py
+class CustomLoginForm(forms.Form):
+    username = forms.CharField(max_length=150, widget=forms.TextInput(attrs={
+        'class': 'form-control',
+        'placeholder': 'Username'
+    }))
+    password = forms.CharField(widget=forms.PasswordInput(attrs={
+        'class': 'form-control',
+        'placeholder': 'Password'
+    }))

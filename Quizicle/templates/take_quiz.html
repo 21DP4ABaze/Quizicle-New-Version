@@ -1,9 +1,16 @@
+
+
+{% extends 'base.html' %}
+
+{% block title %}Quiz List{% endblock %}
+
+{% block content %}
 <form method="post">
     {% csrf_token %}
     {% for question in questions %}
-        <h3>{{ question.Description }}</h3>
-        {% if question.AdditionalImage %}
-            <p><img src="{{ question.AdditionalImage.url }}" alt="Question Image" style="max-width: 100%; height: auto;"></p>
+        <h3>{{ question.description }}</h3>
+        {% if question.image %}
+            <p><img src="{{ question.image.url }}" alt="Question Image" style="max-width: 100%; height: auto;"></p>
         {% endif %}
         {% for answer in question.answers.all %}
             <input type="radio" name="question_{{ question.id }}" value="{{ answer.id }}"> 
@@ -16,3 +23,5 @@
     {% endfor %}
     <button type="submit">Submit</button>
 </form>
+
+{% endblock %}

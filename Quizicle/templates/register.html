@@ -1,19 +1,14 @@
 <!-- register.html -->
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Register</title>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-    <div class="container">
-        <h1>Register</h1>
-        <form method="post">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit" class="btn btn-primary">Register</button>
-        </form>
-        <p>Already have an account? <a href="{% url 'login' %}">Login here</a>.</p>
-    </div>
-</body>
-</html>
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% trans "Register" %}{% endblock %}
+
+{% block content %}
+    <h1>Register</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">{% trans "Register" %}</button>
+    </form>
+    <p>Already have an account? <a href="{% url 'login' %}">{% trans "Login here" %}</a>.</p>
+{% endblock %}

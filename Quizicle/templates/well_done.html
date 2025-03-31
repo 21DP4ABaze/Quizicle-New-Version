@@ -1,26 +1,23 @@
-<!-- well_done.html -->
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Well Done!</title>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-    <div class="container text-center mt-5">
-        <h1>Well Done, {{ user.username }}!</h1>
-        <p>You have successfully logged in.</p>
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% trans "Well Done!" %}{% endblock %}
 
-        <!-- Buttons to navigate to Quiz List & Create Quiz -->
+{% block content %}
+    <div class="text-center">
+        <h1>{% trans "Well Done" %}, {{ user.username }}!</h1>
+        <p>{% trans "You have successfully logged in."%}</p>
+
         <div class="mt-4">
-            <a href="{% url 'quiz_list' %}" class="btn btn-primary">Go to Quiz List</a>
-            <a href="{% url 'create_quiz' %}" class="btn btn-success">Create a New Quiz</a>
+            <a href="{% url 'quiz_list' %}" class="btn btn-primary">{% trans "Go to Quiz List"%}</a>
+            <a href="{% url 'create_quiz' %}" class="btn btn-success">{% trans "Create a New Quiz"%}</a>
+            <div class="btn btn-succes">
+                {% if user.is_authenticated %}
+                    <form action="{% url 'logout' %}" method="post">
+                        {% csrf_token %}
+                        <button class="btn btn-danger" type="submit">Logout</button>
+                    </form>
+                {% endif %}
+            </div>
         </div>
-
-        <!-- Logout Form -->
-        <form action="{% url 'logout' %}" method="post" class="mt-3">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-danger">Logout</button>
-        </form>
     </div>
-</body>
-</html>
+{% endblock %}

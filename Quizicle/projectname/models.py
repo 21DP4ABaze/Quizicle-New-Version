@@ -1,33 +1,35 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 class Quiz(models.Model):
-    QuizName = models.CharField(max_length=150)
-    QuizMaximumPoints = models.IntegerField(default=0, editable=False)  # Auto-calculated
-    QuestionCount = models.IntegerField(default=0, editable=False)  # Auto-calculated
+    quiz_name = models.CharField(max_length=150)
+    quiz_maximum_points = models.IntegerField(default=0, editable=False)  # Auto-calculated
+    question_count = models.IntegerField(default=0, editable=False)  # Auto-calculated
+    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='questions_created')
 
     class Meta:
         app_label = 'projectname'
 
     def __str__(self):
-        return self.QuizName
+        return self.quiz_name
 
     def calculate_max_values(self):
         """Auto-updates max points & question count"""
         self.QuestionCount = self.questions.count()
-        self.QuizMaximumPoints = sum(q.PointsForQuestion for q in self.questions.all())
+        self.QuizMaximumPoints = sum(q.points_for_question for q in self.questions.all())
         self.save()
 
 class Question(models.Model):
-    Description = models.TextField()
-    Quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name="questions")
-    PointsForQuestion = models.IntegerField()
-    AdditionalImage = models.ImageField(upload_to='question_images/', blank=True, null=True)
+    description = models.TextField()
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name="questions")
+    points_for_question = models.IntegerField()
+    image = models.ImageField(upload_to='question_images/', blank=True, null=True)
 
     class Meta:
         app_label = 'projectname'
 
     def __str__(self):
-        return self.Description
+        return self.description
 
 class Answer(models.Model):
     Question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="answers")
@@ -49,4 +51,4 @@ class Results(models.Model):
         app_label = 'projectname'
 
     def __str__(self):
-        return f"{self.User} - {self.Quiz.QuizName} - {self.Result}"
+        return f"{self.User} - {self.Quiz.quiz_name} - {self.Result}"
