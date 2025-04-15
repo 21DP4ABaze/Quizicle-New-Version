@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}Delete Quiz{% endblock %}
+
+{% block content %}
+<div class="alert alert-warning mt-5">
+    <h4>Are you sure you want to delete this quiz?</h4>
+    <p><strong>{{ object.quiz_name }}</strong></p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Yes, delete</button>
+        <a href="{% url 'quiz_list' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}
