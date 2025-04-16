@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Quiz List" %}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Search Box -->
+    <input type="text" id="search-box" placeholder="Search for a quiz" class="form-control mb-4">
+
+    <div id="quiz-list">
+        {% for quiz in quizzes %}
+            <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                <div>
+                    <strong>{{ quiz.quiz_name }}</strong> – 
+                    <a href="{% url 'take_quiz' quiz.id %}" class="btn btn-sm btn-outline-primary ms-2">
+                        {% trans "Take Quiz" %}
+                    </a>
+                </div>
+
+                {% if quiz.creator == user %}
+                    <a href="{% url 'quiz_delete' quiz.id %}" class="btn btn-sm btn-danger" title="Delete this quiz">🗑️</a>
+                {% endif %}
+            </div>
+        {% empty %}
+            <p>{% trans "No quizzes available." %}</p>
+        {% endfor %}
+    </div>
+
+    <!-- Back to Home Button -->
+    <a href="{% url 'well_done' %}" class="btn btn-primary position-fixed bottom-0 start-0 m-3">
+        {% trans "Go Back to Starting Page" %}
+    </a>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let searchInput = document.getElementById("search-box");
+
+        searchInput.addEventListener("input", function () {
+            let query = searchInput.value.toLowerCase();
+            let quizItems = document.querySelectorAll("#quiz-list .d-flex");
+
+            quizItems.forEach(item => {
+                const text = item.innerText.toLowerCase();
+                item.style.display = text.includes(query) ? "" : "none";
+            });
+        });
+    });
+</script>
+{% endblock %}
