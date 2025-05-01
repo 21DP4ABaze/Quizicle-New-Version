@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, ListView, DetailView, FormView
+from django.views.generic import CreateView, ListView, DetailView, DeleteView, TemplateView
 from django.utils.decorators import method_decorator
 from django.db.models import Max
 from .models import Quiz, Question, Answer, Results
@@ -12,7 +12,6 @@ from django.http import JsonResponse
 from django.core.files.storage import default_storage
 from django.db import models
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.views.generic import DeleteView
 
 
 # Registration view
@@ -126,7 +125,7 @@ class TakeQuizView(DetailView):
 
     def post(self, request, *args, **kwargs):
         quiz = self.get_object()
-        questions = quiz.questions.all()  
+        questions = quiz.questions.all()
         score = 0
 
         for question in questions:
@@ -170,11 +169,11 @@ class QuizResultView(DetailView):
         context['score'] = score
         context['message'] = message
         return context
-    
+
 def search_quizzes(request):
     query = request.GET.get('q', '')
     quizzes = Quiz.objects.filter(QuizName__icontains=query) if query else Quiz.objects.all()
-    
+
     data = {
         "quizzes": list(quizzes.values("id", "QuizName"))
     }
@@ -189,3 +188,12 @@ class QuizDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     def test_func(self):
         quiz = self.get_object()
         return quiz.creator == self.request.user  # Only allow quiz owner to delete
+
+
+class QuizPublicList(TemplateView):
+    template_name = 'quiz_public_list.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['quizzes'] = Quiz.objects.all()
+        return context

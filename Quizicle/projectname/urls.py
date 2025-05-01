@@ -33,11 +33,12 @@ urlpatterns = [
     path('register/', views.register, name='register'),
     path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
     path('logout/', LogoutView.as_view(), name='logout'),
-    path('admin/', admin.site.urls),  
+    path('admin/', admin.site.urls),
     # Well done page
     path('well-done/', views.well_done, name='well_done'),
     path('create_quiz/', views.QuizCreateView.as_view(), name='create_quiz'),  # Handles quiz, questions, and answers
-    path('quizzes/', views.QuizListView.as_view(), name='quiz_list'),  # Lists available quizzes
+    path('my-quizzes/', views.QuizListView.as_view(), name='quiz_list'),  # Lists available quizzes
+    path('quizzes/', views.QuizPublicList.as_view(), name='quiz_public_list'),  # Lists available quizzes
     path('quiz/<int:quiz_id>/', views.TakeQuizView.as_view(), name='take_quiz'),  # Taking a quiz
     path('quiz_result/<int:quiz_id>/<int:score>/', views.QuizResultView.as_view(), name='quiz_result'),  # Viewing quiz results
     path('search_quizzes/', views.search_quizzes, name='search_quizzes'),
