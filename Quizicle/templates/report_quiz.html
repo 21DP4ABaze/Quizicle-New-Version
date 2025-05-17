@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Report Quiz{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Report Quiz</h2>
+    <p class="text-muted">Please describe why you are reporting this quiz:</p>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-danger">Submit Report</button>
+    </form>
+
+    <a href="{% url 'quiz_list' %}" class="btn btn-secondary mt-3">Back to Quiz List</a>
+</div>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}Quiz Details{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm p-4">
+        <h2 class="mb-3">{{ quiz.quiz_name }}</h2>
+        
+        <p><strong>Description:</strong> {{ quiz.description }}</p>
+        <p><strong>Number of Questions:</strong> {{ quiz.question_count }}</p>
+        <p><strong>Maximum Points:</strong> {{ quiz.quiz_maximum_points }}</p>
+        <p><strong>Created by:</strong> {{ quiz.creator.username }}</p>
+        
+        <a href="{% url 'take_quiz' quiz.id %}" class="btn btn-primary mt-3">
+            Start Quiz
+        </a>
+
+        {% if quiz.creator != user %}
+            {% if user.is_superuser %}
+            <a href="{% url 'admin_quiz_delete' quiz.id %}" class="btn btn-danger mt-3">
+                    Admin Delete Quiz
+                </a>
+            {% else %}
+            <a href="{% url 'report_quiz' quiz.id %}" class="btn btn-warning mt-3">
+                Report This Quiz
+            </a>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+<a href="{% url 'quiz_list' %}" class="btn btn-secondary position-fixed bottom-0 start-0 m-3">
+    Back to Quiz List
+</a>
+{% endblock %}
+
