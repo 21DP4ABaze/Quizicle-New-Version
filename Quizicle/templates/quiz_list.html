@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Quiz List" %}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <div id="quiz-list">
+        {% for quiz in quizzes %}
+            <div class="quiz-item d-flex justify-content-between align-items-center border-bottom py-2">
+                <div>
+                    <strong>{{ quiz.quiz_name }}</strong> – 
+                    <a href="{% url 'quiz_details' quiz.id %}" class="btn btn-sm btn-outline-primary ms-2">
+                        Details
+                    </a>
+                    {% if quiz.creator == user %}
+                        <a href="{% url 'modify_quiz' quiz.id %}" class="btn btn-sm btn-warning ms-2">
+                            Modify
+                        </a>
+                        <a href="{% url 'quiz_delete' quiz.id %}" class="btn btn-sm btn-danger ms-2">
+                            Delete
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        {% empty %}
+        <div class="d-flex flex-column justify-content-center align-items-center vh-50">
+            <p class="text-muted">{% trans "No quizzes available." %}</p>
+            <a href="{% url 'create_quiz' %}" class="btn btn-success mt-3">
+                {% trans "Create a New Quiz" %}
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+

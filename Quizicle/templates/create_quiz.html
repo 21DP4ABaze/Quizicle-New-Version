@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% block title %}Create Quiz{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Create a New Quiz</h2>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" id="quiz-form">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="quiz_name" class="form-label">Quiz Name:</label>
+            <input type="text" name="quiz_name" id="quiz_name" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="description" class="form-label">Description:</label>
+            <textarea name="description" id="description" class="form-control" rows="3" placeholder="Enter a description for your quiz (optional)"></textarea>
+        </div>
+
+        <h4>Questions</h4>
+        <div id="questions-container"></div>
+
+        <button type="button" id="add-question" class="btn btn-primary mt-3">Add Question</button>
+        <button type="submit" class="btn btn-success mt-3">Save Quiz</button>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        function addQuestion(isDefault = false) {
+            let questionIndex = document.querySelectorAll(".question-block").length;
+            let deleteButton = isDefault ? "" : `<button type="button" class="btn btn-danger btn-sm float-end delete-question" data-id="question-${questionIndex}">Delete</button>`;
+
+            let questionHtml = `
+                <div class="card question-block mt-3 p-3" id="question-${questionIndex}">
+                    ${deleteButton}
+                    <label>Question:</label>
+                    <input type="text" name="questions[]" class="form-control mb-2" required>
+                    
+                    <label>Points:</label>
+                    <input type="number" name="points[]" class="form-control mb-2" min="1" value="1" required>
+                    
+                    <label>Additional Image (Optional):</label>
+                    <input type="file" name="question_images[]" class="form-control mb-2" accept="image/*">
+
+                    <div class="answers">
+                        <label>Answers:</label>
+                        <div class="answer-list" id="answer-list-${questionIndex}">
+                            ${generateAnswerHTML(questionIndex, 0, true)}
+                            ${generateAnswerHTML(questionIndex, 1, true)}
+                        </div>
+                        <button type="button" class="btn btn-sm btn-secondary add-answer" data-question="${questionIndex}">Add Answer</button>
+                    </div>
+
+                    <label>Description of Correct Answer:</label>
+                    <textarea name="descriptions[]" class="form-control mb-2" rows="2" placeholder="Explain why the answer is correct"></textarea>
+
+                    <label>Image for Description (Optional):</label>
+                    <input type="file" name="description_images[]" class="form-control mb-3" accept="image/*">
+                </div>
+            `;
+            document.getElementById("questions-container").insertAdjacentHTML("beforeend", questionHtml);
+        }
+
+        function generateAnswerHTML(questionIndex, answerIndex, isFixed) {
+            let deleteButton = isFixed ? "" : `<button type="button" class="btn btn-sm btn-danger ms-2 delete-answer">X</button>`;
+            return `
+                <div class="answer-block d-flex align-items-center mb-1">
+                    <input type="text" name="all_answers[${questionIndex}][]" class="form-control w-75 me-2" required>
+                    <input type="radio" name="correct_answer_${questionIndex}" value="${answerIndex}" class="form-check-input">
+                    ${deleteButton}
+                </div>
+            `;
+        }
+
+        addQuestion(true);
+
+        document.getElementById("add-question").addEventListener("click", function () {
+            addQuestion(false);
+        });
+
+        document.getElementById("questions-container").addEventListener("click", function (event) {
+            if (event.target.classList.contains("delete-question")) {
+                let questionId = event.target.getAttribute("data-id");
+                document.getElementById(questionId).remove();
+            }
+
+            if (event.target.classList.contains("add-answer")) {
+                let questionIndex = event.target.getAttribute("data-question");
+                let answerList = document.getElementById(`answer-list-${questionIndex}`);
+                let answerIndex = answerList.children.length;
+                answerList.insertAdjacentHTML("beforeend", generateAnswerHTML(questionIndex, answerIndex, false));
+            }
+
+            if (event.target.classList.contains("delete-answer")) {
+                event.target.closest(".answer-block").remove();
+            }
+        });
+
+        document.getElementById("quiz-form").addEventListener("submit", function (e) {
+            const questionBlocks = document.querySelectorAll(".question-block");
+            for (let i = 0; i < questionBlocks.length; i++) {
+                const radios = questionBlocks[i].querySelectorAll('input[type="radio"]');
+                const oneChecked = Array.from(radios).some(r => r.checked);
+                if (!oneChecked) {
+                    alert(`Please select a correct answer for Question ${i + 1}`);
+                    e.preventDefault();
+                    return false;
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
+
+
+
+
+
+
