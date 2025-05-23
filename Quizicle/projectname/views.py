@@ -3,17 +3,18 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
-from django.views.generic import *
+from django.views.generic import View, ListView, DetailView, CreateView, DeleteView, TemplateView
 from django.utils.decorators import method_decorator
 from django.db.models import Max
-from .models import *
-from .forms import *
-from django.http import JsonResponse
 from django.db import models
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.models import User
+
+from .models import Quiz, Question, Answer, Results, Report, Comment, Description
+from .forms import QuizForm, CommentForm, ReportForm
 
 
 def register(request):
@@ -104,7 +105,6 @@ class QuizCreateView(CreateView):
                 )
 
 
-
 class QuizListView(LoginRequiredMixin, ListView):
     model = Quiz
     template_name = 'quiz_list.html'
@@ -114,14 +114,17 @@ class QuizListView(LoginRequiredMixin, ListView):
         query = self.request.GET.get('q', '')
         base_queryset = Quiz.objects.filter(creator=self.request.user)
         return base_queryset.filter(quiz_name__icontains=query) if query else base_queryset
-    
+
+
 class PopularQuizView(ListView):
     model = Quiz
-    template_name='popular_quizes.html'
-    context_object_name='popular_quizes'
+    template_name = 'popular_quizes.html'
+    context_object_name = 'popular_quizes'
 
     def get_queryset(self):
-        return super().get_queryset()
+        qs = super().get_queryset()
+        return qs.annotate(total_count=models.Count('results__quiz')).order_by('-total_count')[:10]
+
 
 @method_decorator(login_required, name='dispatch')
 class TakeQuizView(DetailView):
@@ -134,9 +137,8 @@ class TakeQuizView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['questions'] = self.object.questions.all()  
+        context['questions'] = self.object.questions.all()
         return context
-
 
     def post(self, request, *args, **kwargs):
         quiz = self.get_object()
@@ -185,7 +187,6 @@ class QuizResultView(DetailView):
         return context
 
 
-
 class QuizDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Quiz
     template_name = 'quiz_confirm_delete.html'
@@ -193,7 +194,7 @@ class QuizDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
     def test_func(self):
         quiz = self.get_object()
-        return quiz.creator == self.request.user  
+        return quiz.creator == self.request.user
 
 
 class QuizPublicList(TemplateView):
@@ -203,7 +204,8 @@ class QuizPublicList(TemplateView):
         context = super().get_context_data(**kwargs)
         context['quizzes'] = Quiz.objects.all()
         return context
-    
+
+
 class UserResultsView(ListView):
     model = Results
     template_name = 'user_results.html'
@@ -211,9 +213,9 @@ class UserResultsView(ListView):
 
     def get_queryset(self):
         return Results.objects.filter(user=self.request.user.username).select_related('quiz')
-    
-@method_decorator(login_required, name='dispatch')
 
+
+@method_decorator(login_required, name='dispatch')
 class ModifyQuizView(View):
     template_name = 'modify_quiz.html'
 
@@ -231,7 +233,7 @@ class ModifyQuizView(View):
 
         questions = request.POST.getlist('questions[]')
         points = request.POST.getlist('points[]')
-        
+
         correct_answers = {
             key.split("_")[2]: value
             for key, value in request.POST.items() if key.startswith("correct_answer_")
@@ -260,7 +262,8 @@ class ModifyQuizView(View):
         quiz.calculate_max_values()
 
         return redirect('quiz_list')
-    
+
+
 class QuizDetailView(View):
     template_name = 'quiz_details.html'
 
@@ -284,7 +287,8 @@ class QuizDetailView(View):
             comment.user = request.user
             comment.save()
         return redirect('quiz_details', pk=pk)
-    
+
+
 @method_decorator(login_required, name='dispatch')
 class ReportCreateView(CreateView):
     model = Report
@@ -299,6 +303,8 @@ class ReportCreateView(CreateView):
         report.user = self.request.user
         report.save()
         return redirect(self.success_url)
+
+
 @user_passes_test(lambda u: u.is_superuser)
 def admin_reports_view(request):
     reports = Report.objects.all()
@@ -307,25 +313,28 @@ def admin_reports_view(request):
     }
     return render(request, 'admin/admin_reports.html', context)
 
+
 @user_passes_test(lambda u: u.is_superuser)
 def admin_quiz_delete_view(request, pk):
     quiz = get_object_or_404(Quiz, pk=pk)
-    
+
     if request.method == 'POST':
         quiz.delete()
         return redirect('quiz_list')
 
     return render(request, 'quiz_confirm_delete.html', {'object': quiz})
 
+
 class ReportDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Report
     template_name = 'report_confirm_delete.html'
-    success_url = reverse_lazy('admin_reports')  
+    success_url = reverse_lazy('admin_reports')
 
     def test_func(self):
-        
+
         report = self.get_object()
         return self.request.user.is_superuser or report.user == self.request.user
+
 
 @login_required
 def user_profile(request):
@@ -347,7 +356,7 @@ def user_profile(request):
                 messages.success(request, 'Your password was successfully updated!')
             else:
                 messages.error(request, 'Please correct the error below.')
-        
+
         elif 'delete_account' in request.POST:
             password = request.POST.get('password')
             if user.check_password(password):
@@ -374,13 +383,15 @@ def user_profile(request):
     }
     return render(request, 'user_profile.html', context)
 
+
 class DeleteCommentView(LoginRequiredMixin, View):
     def post(self, request, pk, *args, **kwargs):
         comment = get_object_or_404(Comment, id=pk)
         if comment.user == request.user:
             comment.delete()
         return redirect('quiz_details', pk=comment.quiz.id)
-    
+
+
 @user_passes_test(lambda u: u.is_superuser)
 def user_handler(request):
     users = User.objects.all()
@@ -401,6 +412,6 @@ def user_handler(request):
 
     return render(request, 'admin/user_handler.html', {'users': users})
 
+
 def banned_page(request):
     return render(request, 'banned_page.html')
-

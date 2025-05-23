@@ -1,1 +1,17 @@
 {% extends 'base.html' %}
+
+
+{% block title %}
+    Popular Quizzes
+{% endblock %}
+
+{% block content %}
+    <h1>Popular Quizzes</h1>
+    <ul>
+        {% for quiz in popular_quizes %}
+            <li>
+                <a href="{% url 'quiz_details' quiz.id %}">{{ quiz.quiz_name }}</a> {% if quiz.description %} - {{ quiz.description }}{% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+{% endblock %}

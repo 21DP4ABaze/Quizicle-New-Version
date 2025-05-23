@@ -3,12 +3,14 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+
 class Quiz(models.Model):
     quiz_name = models.CharField(max_length=150)
     description = models.TextField(default="Complete the quiz—get results")
     quiz_maximum_points = models.IntegerField(default=0, editable=False)  # Auto-calculated
     question_count = models.IntegerField(default=0, editable=False)  # Auto-calculated
     creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='questions_created')
+
     class Meta:
         app_label = 'projectname'
         ordering = ['-id']
@@ -22,6 +24,7 @@ class Quiz(models.Model):
         self.QuizMaximumPoints = sum(q.points_for_question for q in self.questions.all())
         self.save()
 
+
 class Question(models.Model):
     description = models.TextField()
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name="questions")
@@ -34,6 +37,7 @@ class Question(models.Model):
     def __str__(self):
         return self.description
 
+
 class Answer(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="answers")
     answer = models.CharField(max_length=255)
@@ -45,6 +49,7 @@ class Answer(models.Model):
     def __str__(self):
         return self.answer
 
+
 class Results(models.Model):
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name="results")
     user = models.CharField(max_length=150)
@@ -55,7 +60,8 @@ class Results(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.quiz.quiz_name} - {self.result}"
-    
+
+
 class Report(models.Model):
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name="reports")
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_reports")
@@ -68,7 +74,7 @@ class Report(models.Model):
 
     def __str__(self):
         return f"Report by {self.user.username} on '{self.quiz.quiz_name}'"
-    
+
 class Description(models.Model):
     question = models.OneToOneField(Question, on_delete=models.CASCADE, related_name='answer_description')
     text = models.TextField()
@@ -86,14 +92,14 @@ class Comment(models.Model):
 
     def __str__(self):
         return f'Comment by {self.user} on {self.quiz}'
-    
+
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     banned = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.user.username} Profile"
-    
+
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
