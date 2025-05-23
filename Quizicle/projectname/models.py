@@ -1,6 +1,7 @@
+import os
 from django.db import models
 from django.contrib.auth.models import User
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete, pre_save
 from django.dispatch import receiver
 
 
@@ -93,6 +94,7 @@ class Comment(models.Model):
     def __str__(self):
         return f'Comment by {self.user} on {self.quiz}'
 
+
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     banned = models.BooleanField(default=False)
@@ -100,7 +102,33 @@ class UserProfile(models.Model):
     def __str__(self):
         return f"{self.user.username} Profile"
 
+
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         UserProfile.objects.create(user=instance)
+
+
+# Signal handlers
+@receiver(post_delete, sender=Question)
+def delete_question_image(sender, instance, **kwargs):
+    """Delete image file when Question instance is deleted."""
+    if instance.image:
+        if os.path.isfile(instance.image.path):
+            os.remove(instance.image.path)
+
+
+@receiver(pre_save, sender=Question)
+def delete_old_image_on_update(sender, instance, **kwargs):
+    """Delete old image file when Question image is updated."""
+    if not instance.pk:
+        return False
+
+    try:
+        old_image = Question.objects.get(pk=instance.pk).image
+    except Question.DoesNotExist:
+        return False
+
+    if old_image and old_image != instance.image:
+        if os.path.isfile(old_image.path):
+            os.remove(old_image.path)
