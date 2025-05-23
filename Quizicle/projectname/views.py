@@ -13,7 +13,7 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.models import User
 
-from .models import Quiz, Question, Answer, Results, Report, Comment, Description
+from .models import Quiz, Question, Answer, Results, Report, Comment, Description, QuizResultAnswer
 from .forms import QuizForm, CommentForm, ReportForm
 
 
@@ -145,6 +145,8 @@ class TakeQuizView(DetailView):
         questions = quiz.questions.all()
         score = 0
 
+        result = Results.objects.create(quiz=quiz, user=self.request.user.username, result=score)
+
         for question in questions:
             selected_answer_id = request.POST.get(f'question_{question.id}')
             if selected_answer_id:
@@ -152,8 +154,16 @@ class TakeQuizView(DetailView):
                 if selected_answer.correct:
                     score += question.points_for_question
 
-        return redirect('quiz_result', quiz_id=quiz.id, score=score)
+            QuizResultAnswer.objects.create(
+                quiz_result=result,
+                question=question,
+                answer=selected_answer
+            )
 
+        result.result = score
+        result.save()
+
+        return redirect('quiz_result', quiz_id=quiz.id, score=score)
 
 
 
@@ -171,11 +181,17 @@ class QuizResultView(DetailView):
         context = super().get_context_data(**kwargs)
         quiz = self.get_object()
         score = self.kwargs['score']
+        answers = QuizResultAnswer.objects.filter(
+            quiz_result__quiz=quiz, quiz_result__user=self.request.user.username
+        )
+
+        for answer in answers:
+            answer.correct_answer = answer.question.answers.filter(correct=True).first()
 
         previous_result = Results.objects.filter(quiz=quiz, user=self.request.user.username).aggregate(Max('result'))['result__max']
 
         if previous_result is None or score > previous_result:
-            Results.objects.create(quiz=quiz, user=self.request.user.username, result=score)
+            # Results.objects.create(quiz=quiz, user=self.request.user.username, result=score)
             message = f"New High Score! You scored {score}."
         elif score == previous_result:
             message = f"You matched your previous best score: {score}."
@@ -184,6 +200,7 @@ class QuizResultView(DetailView):
 
         context['score'] = score
         context['message'] = message
+        context['answers'] = answers
         return context
 
 

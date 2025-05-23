@@ -12,9 +12,9 @@ class QuizAdmin(admin.ModelAdmin):
 class DescriptionInline(admin.StackedInline):
     model = Description
     extra = 0
-    max_num = 1  
+    max_num = 1
     fields = ('description', 'image')
-    readonly_fields = ()  
+    readonly_fields = ()
 
 
 class QuestionAdmin(admin.ModelAdmin):
@@ -22,7 +22,7 @@ class QuestionAdmin(admin.ModelAdmin):
     list_filter = ('quiz', 'points_for_question')
     search_fields = ('description', 'quiz__quizName')
     ordering = ('quiz', 'points_for_question')
-    inlines = [DescriptionInline]  
+    inlines = [DescriptionInline]
 
 ### ANSWER ADMIN ###
 class AnswerAdmin(admin.ModelAdmin):
@@ -53,10 +53,15 @@ class QuestionInline(admin.TabularInline):
 class QuizAdminWithQuestions(admin.ModelAdmin):
     inlines = [QuestionInline]
 
+
+class QuizResultAnswerAdmin(admin.ModelAdmin):
+    list_display = ('quiz_result', 'question', 'answer')
+
 ### REGISTER MODELS ###
 admin.site.register(Quiz, QuizAdminWithQuestions)
 admin.site.register(Question, QuestionAdmin)
 admin.site.register(Answer, AnswerAdmin)
 admin.site.register(Results, ResultsAdmin)
 admin.site.register(Report, ReportAdmin)
-admin.site.register(Description) 
+admin.site.register(QuizResultAnswer, QuizResultAnswerAdmin)
+# admin.site.register(Description, DescriptionAdmin)

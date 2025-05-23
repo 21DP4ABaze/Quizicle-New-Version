@@ -63,6 +63,18 @@ class Results(models.Model):
         return f"{self.user} - {self.quiz.quiz_name} - {self.result}"
 
 
+class QuizResultAnswer(models.Model):
+    quiz_result = models.ForeignKey('Results', on_delete=models.CASCADE, related_name='quiz_result_answers')
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+    answer = models.ForeignKey(Answer, on_delete=models.CASCADE)
+
+    class Meta:
+        app_label = 'projectname'
+
+    def __str__(self):
+        return f"{self.quiz_result} - {self.question} - {self.answer}"
+
+
 class Report(models.Model):
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name="reports")
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_reports")

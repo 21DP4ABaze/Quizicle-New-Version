@@ -1,6 +1,16 @@
 {% extends 'base.html' %}
 {% block title %}Quiz Results for {{ quiz.QuizName }}{% endblock %}
+
 {% block content %}
-<p>{{ message }}</p>
-<a href="{% url 'quiz_public_list' %}">Back to Quiz List</a>
+    <p>{{ message }}</p>
+    <a href="{% url 'quiz_public_list' %}">Back to Quiz List</a>
+
+
+    {% for answer in answers %}
+        <div>
+            <h4>{{ answer.question.description }}</h4>
+            <p>Your Answer: {{ answer.answer }}</p>
+            <p>Correct Answer: {{ answer.correct_answer.answer }}</p>
+        </div>
+    {% endfor %}
 {% endblock %}
