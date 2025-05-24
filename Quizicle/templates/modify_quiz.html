@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Modify Quiz{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Modify Quiz - {{ quiz.quiz_name }}</h2>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div class="mb-3">
+            <label for="quiz_name" class="form-label">Quiz Name:</label>
+            <input type="text" name="quiz_name" id="quiz_name" class="form-control" value="{{ quiz.quiz_name }}" required>
+        </div>
+
+        <h4>Questions</h4>
+        <div id="questions-container">
+            {% for question in quiz.questions.all %}
+                <div class="card question-block mt-3 p-3">
+                    <label>Question:</label>
+                    <input type="text" name="questions[]" class="form-control mb-2" value="{{ question.description }}" required>
+                    <label>Points:</label>
+                    <input type="number" name="points[]" class="form-control mb-2" value="{{ question.points_for_question }}" min="1" required>
+
+                    <div class="answers">
+                        <label>Answers:</label>
+                        <div class="answer-list">
+                            {% for answer in question.answers.all %}
+                                <div class="answer-block d-flex align-items-center mb-1">
+                                    <input type="text" name="all_answers[{{ forloop.parentloop.counter0 }}][]" class="form-control w-75 me-2" value="{{ answer.answer }}" required>
+                                    <input type="radio" name="correct_answer_{{ forloop.parentloop.counter0 }}" value="{{ forloop.counter0 }}" {% if answer.correct %}checked{% endif %} class="form-check-input">
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <button type="submit" class="btn btn-success mt-3">Save Changes</button>
+    </form>
+</div>
+{% endblock %}
