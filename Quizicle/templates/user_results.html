@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}My Quiz Results{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Your Quiz Results</h2>
+
+{% if user.is_authenticated %}
+    {% if results %}
+        <table class="table table-bordered table-striped">
+            <thead class="table-primary">
+                <tr>
+                    <th>Quiz Name</th>
+                    <th>Your Score</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for result in results %}
+                <tr>
+                    <td>{{ result.quiz.quiz_name }}</td>
+                    <td>{{ result.result }} / {{ result.quiz.quiz_maximum_points }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="alert alert-info">You haven’t completed any quizzes yet.</div>
+    {% endif %}
+{% else %}
+    <div class="alert alert-warning">
+        Log in to your account to see your quiz results. 
+        <a href="{% url 'login' %}" class="btn btn-primary btn-sm ms-3">Login</a>
+    </div>
+{% endif %}
+{% endblock %}
+

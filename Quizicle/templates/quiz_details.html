@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block title %}Quiz Details{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm p-4">
+        <h2 class="mb-3">{{ quiz.quiz_name }}</h2>
+        
+        <p><strong>Description:</strong> {{ quiz.description }}</p>
+        <p><strong>Number of Questions:</strong> {{ quiz.question_count }}</p>
+        <p><strong>Maximum Points:</strong> {{ quiz.quiz_maximum_points }}</p>
+        <p><strong>Created by:</strong> {{ quiz.creator.username }}</p>
+
+        <a href="{% url 'take_quiz' quiz.id %}" class="btn btn-primary mt-3">
+            Start Quiz
+        </a>
+
+        {% if quiz.creator != user %}
+            {% if user.is_superuser %}
+                <a href="{% url 'admin_quiz_delete' quiz.id %}" class="btn btn-danger mt-3">
+                    Admin Delete Quiz
+                </a>
+            {% else %}
+                <a href="{% url 'report_quiz' quiz.id %}" class="btn btn-warning mt-3">
+                    Report This Quiz
+                </a>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+<!-- COMMENTS SECTION -->
+<div class="container mt-4">
+    <h4>Comments:</h4>
+
+    {% for comment in comments %}
+        <div class="card mt-2">
+            <div class="card-body d-flex justify-content-between">
+                <div>
+                    <h6>{{ comment.user.username }} 
+                        <small class="text-muted">{{ comment.created_at }}</small>
+                    </h6>
+                    <p>{{ comment.content }}</p>
+                </div>
+                
+                <!-- Show delete button only if the user is the comment creator -->
+                {% if comment.user == user %}
+                    <form method="post" action="{% url 'delete_comment' comment.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    {% empty %}
+        <p>No comments yet. Be the first to comment!</p>
+    {% endfor %}
+</div>
+
+<!-- COMMENT FORM FOR LOGGED IN USERS -->
+{% if user.is_authenticated %}
+    <div class="container mt-3">
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <textarea name="content" class="form-control" rows="3" 
+                          placeholder="Write your comment here..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-success">Add Comment</button>
+        </form>
+    </div>
+{% else %}
+    <div class="container mt-3">
+        <p class="text-danger">* Login to leave a comment.</p>
+    </div>
+{% endif %}
+
+<a href="javascript:history.back()" class="btn btn-secondary position-fixed bottom-0 start-0 m-3">
+    Back to Previous Page
+</a>
+{% endblock %}
+
+
