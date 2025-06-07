@@ -3,7 +3,7 @@ services:
     build: .
     restart: unless-stopped
     ports:
-      - "8000"
+      - "9001:8000"
     environment:
       - DEBUG=${DEBUG:-False}
       - SECRET_KEY=${SECRET_KEY}
