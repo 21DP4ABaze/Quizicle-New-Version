@@ -13,6 +13,9 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.models import User
 from django.db.models import Count
+from django.http import JsonResponse
+from django.db import connection
+from django.utils import timezone
 
 from .models import Quiz, Question, Answer, Results, Report, Comment, Description, QuizResultAnswer
 from .forms import QuizForm, CommentForm, ReportForm
@@ -273,7 +276,7 @@ class ModifyQuizView(View):
                 question.description = question_text.strip()
                 question.points_for_question = int(points[index])
                 question.save()
-                question.answers.all().delete() 
+                question.answers.all().delete()
             else:
                 # Create new question
                 question = Question.objects.create(
@@ -471,4 +474,4 @@ def user_handler(request):
 
 
 def banned_page(request):
-    return render(request, 'banned_page.html')
+    return render(request, 'banned.html')
