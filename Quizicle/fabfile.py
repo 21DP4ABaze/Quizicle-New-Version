@@ -254,7 +254,7 @@ def status(ctx):
         conn.run('df -h /')
 
         print("\n🗃️  Database Size:")
-        conn.run(f'ls -lh {REMOTE_PROJECT_DIR}/db.sqlite3', warn=True)
+        conn.run(f'ls -lh {REMOTE_PROJECT_DIR}/db_data/db.sqlite3', warn=True)
 
 
 @task
