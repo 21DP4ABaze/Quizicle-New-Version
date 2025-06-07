@@ -174,24 +174,24 @@ def deploy_application(conn, quick=False):
     with conn.cd(REMOTE_PROJECT_DIR):
         # Stop existing containers
         print("🛑 Stopping existing containers...")
-        conn.run('docker-compose down', warn=True)
+        conn.run('docker compose down', warn=True)
 
         if not quick:
             # Build new images
             print("🔨 Building Docker images...")
-            conn.run('docker-compose build --no-cache')
+            conn.run('docker compose build --no-cache')
 
         # Start containers
         print("▶️  Starting containers...")
-        conn.run('docker-compose up -d')
+        conn.run('docker compose up -d')
 
         # Run migrations
         print("🗃️  Running database migrations...")
-        conn.run('docker-compose exec -T web python manage.py migrate')
+        conn.run('docker compose exec -T web python manage.py migrate')
 
         # Collect static files
         print("📁 Collecting static files...")
-        conn.run('docker-compose exec -T web python manage.py collectstatic --noinput')
+        conn.run('docker compose exec -T web python manage.py collectstatic --noinput')
 
     print("✅ Application deployed")
 
@@ -202,7 +202,7 @@ def verify_deployment(conn):
 
     with conn.cd(REMOTE_PROJECT_DIR):
         # Check container status
-        result = conn.run('docker-compose ps')
+        result = conn.run('docker compose ps')
         print("Container status:")
         print(result.stdout)
 
@@ -229,7 +229,7 @@ def logs(ctx, service='web', lines=100):
     conn = Connection(ctx.host, user=ctx.user or 'root')
 
     with conn.cd(REMOTE_PROJECT_DIR):
-        conn.run(f'docker-compose logs --tail={lines} -f {service}')
+        conn.run(f'docker compose logs --tail={lines} -f {service}')
 
 
 @task
@@ -239,7 +239,7 @@ def status(ctx):
 
     with conn.cd(REMOTE_PROJECT_DIR):
         print("📊 Container Status:")
-        conn.run('docker-compose ps')
+        conn.run('docker compose ps')
 
         print("\n💾 Disk Usage:")
         conn.run('df -h /')
@@ -256,10 +256,10 @@ def restart(ctx, service=None):
     with conn.cd(REMOTE_PROJECT_DIR):
         if service:
             print(f"🔄 Restarting {service} service...")
-            conn.run(f'docker-compose restart {service}')
+            conn.run(f'docker compose restart {service}')
         else:
             print("🔄 Restarting all services...")
-            conn.run('docker-compose restart')
+            conn.run('docker compose restart')
 
 
 @task
@@ -268,7 +268,7 @@ def shell(ctx):
     conn = Connection(ctx.host, user=ctx.user or 'root')
 
     with conn.cd(REMOTE_PROJECT_DIR):
-        conn.run('docker-compose exec web python manage.py shell')
+        conn.run('docker compose exec web python manage.py shell')
 
 
 @task
@@ -303,9 +303,9 @@ def local_test(ctx):
     """Test the deployment locally."""
     print("🧪 Testing deployment locally...")
 
-    ctx.run('docker-compose down', warn=True)
-    ctx.run('docker-compose build')
-    ctx.run('docker-compose up -d')
+    ctx.run('docker compose down', warn=True)
+    ctx.run('docker compose build')
+    ctx.run('docker compose up -d')
 
     print("✅ Local test deployment complete")
     print("🌐 Access your app at: http://localhost")
