@@ -231,7 +231,7 @@ def backup(ctx):
 
 
 @task
-def logs(ctx, service='web', lines=100):
+def logs(ctx, service='quizicle_web', lines=100):
     """View application logs."""
     conn, host, user = get_connection(ctx)
     print(f"📋 Viewing logs from {user}@{host}")

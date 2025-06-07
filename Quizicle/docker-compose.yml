@@ -10,13 +10,14 @@ services:
       - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1}
     volumes:
       - ./media:/app/media
-      - ./db.sqlite3:/app/db.sqlite3
+      - db_data:/app/db_data
       - static_volume:/app/staticfiles
     networks:
       - django_net
 
 volumes:
   static_volume:
+  db_data:
 
 networks:
   django_net:

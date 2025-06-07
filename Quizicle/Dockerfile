@@ -42,7 +42,7 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 COPY . .
 
 # Create necessary directories and set permissions
-RUN mkdir -p /app/staticfiles /app/media && \
+RUN mkdir -p /app/staticfiles /app/media /app/db_data && \
     chown -R django:django /app
 
 # Switch to non-root user
