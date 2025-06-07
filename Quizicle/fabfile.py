@@ -4,6 +4,7 @@ Automates deployment from local repository to production server.
 
 Usage:
     fab deploy --host=your-server-ip --user=your-username
+    Or simply: fab deploy (uses defaults)
 """
 
 import os
@@ -19,6 +20,18 @@ PROJECT_NAME = "quizicle"
 REMOTE_PROJECT_DIR = f"/var/www/{PROJECT_NAME}"
 BACKUP_DIR = f"/var/www/{PROJECT_NAME}/backups"
 ARCHIVE_NAME = f"{PROJECT_NAME}-{datetime.now().strftime('%Y%m%d_%H%M%S')}.tar.gz"
+
+# Default connection settings
+DEFAULT_HOST = "doha.trialine.lv"
+DEFAULT_USER = "ubuntu"
+
+
+def get_connection(ctx):
+    """Get connection with default host and user if not provided."""
+    host = getattr(ctx, 'host', None) or DEFAULT_HOST
+    # user = getattr(ctx, 'user', None) or DEFAULT_USER
+    user = DEFAULT_USER
+    return Connection(host, user=user), host, user
 
 
 def create_archive():
@@ -58,16 +71,9 @@ def deploy(ctx, backup=False, quick=False):
         backup: Create database backup before deployment (default: False)
         quick: Skip building images, only restart containers (default: False)
     """
-    # host = ctx.host
-    # user = ctx.user or 'root'
-
-    host = 'doha.trialine.lv'
-    user = 'ubuntu'
+    conn, host, user = get_connection(ctx)
 
     print(f"🚀 Starting deployment to {user}@{host}")
-
-    # Create connection to remote server
-    conn = Connection(host, user=user)
 
     try:
         # Step 1: Create project archive
@@ -219,14 +225,16 @@ def verify_deployment(conn):
 @task
 def backup(ctx):
     """Create a backup of the production database."""
-    conn = Connection(ctx.host, user=ctx.user or 'root')
+    conn, host, user = get_connection(ctx)
+    print(f"💾 Creating backup on {user}@{host}")
     backup_database(conn)
 
 
 @task
 def logs(ctx, service='web', lines=100):
     """View application logs."""
-    conn = Connection(ctx.host, user=ctx.user or 'root')
+    conn, host, user = get_connection(ctx)
+    print(f"📋 Viewing logs from {user}@{host}")
 
     with conn.cd(REMOTE_PROJECT_DIR):
         conn.run(f'docker compose logs --tail={lines} -f {service}')
@@ -235,7 +243,8 @@ def logs(ctx, service='web', lines=100):
 @task
 def status(ctx):
     """Check application status."""
-    conn = Connection(ctx.host, user=ctx.user or 'root')
+    conn, host, user = get_connection(ctx)
+    print(f"📊 Checking status on {user}@{host}")
 
     with conn.cd(REMOTE_PROJECT_DIR):
         print("📊 Container Status:")
@@ -251,7 +260,8 @@ def status(ctx):
 @task
 def restart(ctx, service=None):
     """Restart application services."""
-    conn = Connection(ctx.host, user=ctx.user or 'root')
+    conn, host, user = get_connection(ctx)
+    print(f"🔄 Restarting services on {user}@{host}")
 
     with conn.cd(REMOTE_PROJECT_DIR):
         if service:
@@ -265,7 +275,8 @@ def restart(ctx, service=None):
 @task
 def shell(ctx):
     """Open Django shell on remote server."""
-    conn = Connection(ctx.host, user=ctx.user or 'root')
+    conn, host, user = get_connection(ctx)
+    print(f"🐚 Opening Django shell on {user}@{host}")
 
     with conn.cd(REMOTE_PROJECT_DIR):
         conn.run('docker compose exec web python manage.py shell')
@@ -274,13 +285,13 @@ def shell(ctx):
 @task
 def update_env(ctx, env_file='.env'):
     """Upload environment file to server."""
-    conn = Connection(ctx.host, user=ctx.user or 'root')
+    conn, host, user = get_connection(ctx)
 
     if not os.path.exists(env_file):
         print(f"❌ Environment file {env_file} not found")
         return
 
-    print(f"📤 Uploading {env_file} to server...")
+    print(f"📤 Uploading {env_file} to {user}@{host}...")
     conn.put(env_file, f'{REMOTE_PROJECT_DIR}/.env')
     print("✅ Environment file updated")
 
