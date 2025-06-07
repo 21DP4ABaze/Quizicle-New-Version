@@ -187,11 +187,11 @@ def deploy_application(conn, quick=False):
 
         # Run migrations
         print("🗃️  Running database migrations...")
-        conn.run('docker compose exec -T web python manage.py migrate')
+        conn.run('docker compose exec -T quizicle_web python manage.py migrate')
 
         # Collect static files
         print("📁 Collecting static files...")
-        conn.run('docker compose exec -T web python manage.py collectstatic --noinput')
+        conn.run('docker compose exec -T quizicle_web python manage.py collectstatic --noinput')
 
     print("✅ Application deployed")
 
