@@ -9,16 +9,14 @@ services:
       - SECRET_KEY=${SECRET_KEY}
       - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1}
     volumes:
-      - media_volume:/app/media
-      - db_data:/app/db_data
+      - ./media:/app/media
+      - ./db_data:/app/db_data
       - static_volume:/app/staticfiles
     networks:
       - django_net
 
 volumes:
   static_volume:
-  db_data:
-  media_volume:
 
 networks:
   django_net:
