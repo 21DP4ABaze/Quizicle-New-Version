@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}Take Quiz{% endblock %}
+
+{% block content %}
+<form method="post">
+    {% csrf_token %}
+    {% for question in questions %}
+        <div class="mb-4">
+            <h4>{{ question.description }}</h4>
+            {% if question.image %}
+                <img src="{{ question.image.url }}" alt="Question Image" class="img-fluid mb-2">
+            {% endif %}
+            {% for answer in question.answers.all %}
+                <div class="form-check">
+                    <input 
+                        class="form-check-input" 
+                        type="radio" 
+                        name="question_{{ question.id }}" 
+                        value="{{ answer.id }}" 
+                        id="answer_{{ answer.id }}"
+                        {% if forloop.first %}required{% endif %}>
+                    <label class="form-check-label" for="answer_{{ answer.id }}">
+                        {{ answer.answer }}
+                    </label>
+                </div>
+            {% empty %}
+                <p class="text-danger">No answers available for this question.</p>
+            {% endfor %}
+        </div>
+    {% empty %}
+        <p>No questions available.</p>
+    {% endfor %}
+
+    <button class="btn btn-primary mt-3" type="submit">Submit</button>
+</form>
+{% endblock %}

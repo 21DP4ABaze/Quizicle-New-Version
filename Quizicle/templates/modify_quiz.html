@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% block title %}Modify Quiz{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Modify Quiz - {{ quiz.quiz_name }}</h2>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div class="mb-3">
+            <label for="quiz_name" class="form-label">Quiz Name:</label>
+            <input type="text" name="quiz_name" id="quiz_name" class="form-control" value="{{ quiz.quiz_name }}" required>
+        </div>
+
+        <h4>Questions</h4>
+        <div id="questions-container">
+            {% for question in quiz.questions.all %}
+                <div class="card question-block mt-3 p-3 existing-question" data-index="{{ forloop.counter0 }}">
+                    <label>Question:</label>
+                    <input type="text" name="questions[]" class="form-control mb-2" value="{{ question.description }}" required>
+
+                    <label>Points:</label>
+                    <input type="number" name="points[]" class="form-control mb-2" value="{{ question.points_for_question }}" min="1" required>
+
+                    <label>Image:</label>
+                    {% if question.image %}
+                        <div class="mb-2">
+                            <img src="{{ question.image.url }}" class="img-fluid" style="max-width: 200px;">
+                        </div>
+                    {% endif %}
+                    <input type="file" name="question_image[]" class="form-control mb-2">
+
+                    <div class="answers">
+                        <label>Answers:</label>
+                        <div class="answer-list">
+                            {% for answer in question.answers.all %}
+                                <div class="answer-block d-flex align-items-center mb-1">
+                                    <input type="text" name="all_answers[{{ forloop.parentloop.counter0 }}][]" class="form-control w-75 me-2" value="{{ answer.answer }}" required>
+                                    <input type="radio" name="correct_answer_{{ forloop.parentloop.counter0 }}" value="{{ forloop.counter0 }}" {% if answer.correct %}checked{% endif %} class="form-check-input me-2">
+                                    <!-- No delete button for existing answers -->
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary mt-2" onclick="addAnswer(this, {{ forloop.counter0 }})">Add Answer</button>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <button type="button" class="btn btn-secondary mt-3" onclick="addQuestion()">Add Question</button>
+        <button type="submit" class="btn btn-success mt-3">Save Changes</button>
+    </form>
+</div>
+
+<script>
+let questionIndex = {{ quiz.questions.count }};
+
+function addQuestion() {
+    const container = document.getElementById('questions-container');
+    const index = questionIndex++;
+
+    const questionHTML = `
+        <div class="card question-block mt-3 p-3 new-question" data-index="${index}">
+            <label>Question:</label>
+            <input type="text" name="questions[]" class="form-control mb-2" required>
+
+            <label>Points:</label>
+            <input type="number" name="points[]" class="form-control mb-2" min="1" required>
+
+            <label>Image:</label>
+            <input type="file" name="question_image[]" class="form-control mb-2">
+
+            <div class="answers">
+                <label>Answers:</label>
+                <div class="answer-list">
+                    ${generateDefaultAnswer(index, 0, false)}
+                    ${generateDefaultAnswer(index, 1, false)}
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-secondary mt-2" onclick="addAnswer(this, ${index})">Add Answer</button>
+            </div>
+
+            <button type="button" class="btn btn-danger mt-3" onclick="removeQuestion(this)">Remove Question</button>
+        </div>
+    `;
+
+    container.insertAdjacentHTML('beforeend', questionHTML);
+}
+
+function generateDefaultAnswer(qIndex, aIndex, canDelete = true) {
+    return `
+        <div class="answer-block d-flex align-items-center mb-1">
+            <input type="text" name="all_answers[${qIndex}][]" class="form-control w-75 me-2" required>
+            <input type="radio" name="correct_answer_${qIndex}" value="${aIndex}" class="form-check-input me-2">
+            ${canDelete ? `<button type="button" class="btn btn-sm btn-danger" onclick="removeAnswer(this)">X</button>` : ''}
+        </div>
+    `;
+}
+
+function addAnswer(btn, questionIdx) {
+    const answerList = btn.parentElement.querySelector('.answer-list');
+    const count = answerList.querySelectorAll('.answer-block').length;
+    const answerHTML = generateDefaultAnswer(questionIdx, count, true);
+    answerList.insertAdjacentHTML('beforeend', answerHTML);
+}
+
+function removeAnswer(btn) {
+    btn.closest('.answer-block').remove();
+}
+
+function removeQuestion(btn) {
+    const block = btn.closest('.question-block');
+    if (block.classList.contains('existing-question')) {
+        alert("You can't delete existing questions from here.");
+    } else {
+        block.remove();
+    }
+}
+</script>
+{% endblock %}

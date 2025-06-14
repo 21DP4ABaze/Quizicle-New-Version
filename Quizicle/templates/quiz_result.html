@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}Quiz Results for {{ quiz.quiz_name }}{% endblock %}
+
+{% block content %}
+    <p>{{ message }}</p>
+    <a href="{% url 'quiz_public_list' %}">Back to Quiz List</a>
+
+    {% for answer in answers %}
+        <div class="mb-4 p-3 border rounded">
+            <h4>{{ answer.question.description }}</h4>
+            <p><strong>Your Answer:</strong> {{ answer.answer }}</p>
+            <p><strong>Correct Answer:</strong> {{ answer.correct_answer.answer }}</p>
+
+            {% if answer.question.answer_description %}
+                <div class="mt-2">
+                    <p><strong>Explanation:</strong> {{ answer.question.answer_description.text }}</p>
+                    {% if answer.question.answer_description.image %}
+                        <img src="{{ answer.question.answer_description.image.url }}" alt="Description Image" style="max-width: 400px; height: auto;" class="mt-2">
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    {% endfor %}
+{% endblock %}
+
