@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}Reports Overview{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>All Reports</h2>
+
+    {% if reports %}
+        <table class="table table-bordered table-striped mt-3">
+            <thead class="table-danger">
+                <tr>
+                    <th>Sender</th>
+                    <th>Description</th>
+                    <th>Timestamp</th>
+                    <th>Quiz Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for report in reports %}
+                    <tr>
+                        <td>{{ report.user.username }}</td>
+                        <td>{{ report.description }}</td>
+                        <td>{{ report.timestamp }}</td>
+                        <td>
+                            <a href="{% url 'quiz_details' report.quiz.id %}" class="btn btn-primary btn-sm">
+                                View Quiz
+                            </a>
+                            <a href="{% url 'report_delete' report.id %}" class="btn btn-danger btn-sm ms-2">
+                                Delete
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="alert alert-info">
+            There are currently no reports.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

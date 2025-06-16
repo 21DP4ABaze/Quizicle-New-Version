@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Popular Quizzes
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Popular Quizzes</h1>
+    <div class="list-group">
+        {% for quiz in popular_quizes %}
+            <a href="{% url 'quiz_details' quiz.id %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-1">{{ quiz.quiz_name }}</h5>
+                    <small class="text-muted">{{ quiz.description }}</small>
+                </div>
+                <span class="badge bg-primary rounded-pill">{{ quiz.result_count }} taken</span>
+            </a>
+        {% empty %}
+            <p class="text-muted">No quizzes have been taken yet.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

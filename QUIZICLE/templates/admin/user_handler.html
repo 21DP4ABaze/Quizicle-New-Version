@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}User Handler{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>User Handler</h2>
+    <table class="table mt-3">
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.username }}</td>
+                <td>{{ user.email }}</td>
+                <td>
+                    {% if user.profile.banned %}
+                        <span class="text-danger">Banned</span>
+                    {% else %}
+                        <span class="text-success">Active</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <form method="post" style="display: inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                        <button name="action" value="delete" class="btn btn-danger btn-sm">Delete</button>
+
+                        {% if user.profile.banned %}
+                            <button name="action" value="unban" class="btn btn-success btn-sm">Unban</button>
+                        {% else %}
+                            <button name="action" value="ban" class="btn btn-warning btn-sm">Ban</button>
+                        {% endif %}
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

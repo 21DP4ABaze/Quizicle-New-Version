@@ -1,0 +1,20 @@
+services:
+  quizicle_web:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "9001:8000"
+    environment:
+      - DEBUG=${DEBUG:-False}
+      - SECRET_KEY=${SECRET_KEY}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1}
+    volumes:
+      - ./media:/app/media
+      - ./db_data:/app/db_data
+      - ./staticfiles:/app/staticfiles
+    networks:
+      - django_net
+
+networks:
+  django_net:
+    driver: bridge

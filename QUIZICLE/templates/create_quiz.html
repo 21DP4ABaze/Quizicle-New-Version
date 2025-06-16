@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+{% block title %}Create Quiz{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Create a New Quiz</h2>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Dropdown to select existing quiz -->
+    <div class="mb-3">
+        <label for="existing_quiz" class="form-label">Load Existing Quiz:</label>
+        <select id="existing_quiz" class="form-select">
+            <option value="">-- Select a quiz to clone --</option>
+            {% for q in user_quizzes %}
+                <option value="{{ q.id }}">{{ q.quiz_name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" id="quiz-form">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="quiz_name" class="form-label">Quiz Name:</label>
+            <input type="text" name="quiz_name" id="quiz_name" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="description" class="form-label">Description:</label>
+            <textarea name="description" id="description" class="form-control" rows="3" placeholder="Enter a description for your quiz (optional)"></textarea>
+        </div>
+
+        <h4>Questions</h4>
+        <div id="questions-container"></div>
+
+        <button type="button" id="add-question" class="btn btn-primary mt-3">Add Question</button>
+        <button type="submit" class="btn btn-success mt-3">Save Quiz</button>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        function generateAnswerHTML(questionIndex, answerIndex, isFixed, answerText = '', isChecked = false) {
+            let deleteButton = isFixed ? "" : `<button type="button" class="btn btn-sm btn-danger ms-2 delete-answer">X</button>`;
+            return `
+                <div class="answer-block d-flex align-items-center mb-1">
+                    <input type="text" name="all_answers[${questionIndex}][]" class="form-control w-75 me-2" value="${answerText}" required>
+                    <input type="radio" name="correct_answer_${questionIndex}" value="${answerIndex}" class="form-check-input" ${isChecked ? 'checked' : ''}>
+                    ${deleteButton}
+                </div>
+            `;
+        }
+
+        function addQuestion(isDefault = false, data = null) {
+            let questionIndex = document.querySelectorAll(".question-block").length;
+            let deleteButton = isDefault ? "" : `<button type="button" class="btn btn-danger btn-sm float-end delete-question" data-id="question-${questionIndex}">Delete</button>`;
+
+            let questionValue = data ? data.description : '';
+            let pointsValue = data ? data.points_for_question : 1;
+            let descriptionText = data ? data.description_text : '';
+            
+            // If data.image_url exists, show image preview, else empty
+            let questionImageHTML = '';
+            if(data && data.image_url){
+                questionImageHTML = `<div class="mb-2"><img src="${data.image_url}" alt="Question Image" style="max-height:100px;"></div>`;
+            }
+
+            let descriptionImageHTML = '';
+            if(data && data.description_image_url){
+                descriptionImageHTML = `<div class="mb-2"><img src="${data.description_image_url}" alt="Description Image" style="max-height:100px;"></div>`;
+            }
+
+            let questionHtml = `
+                <div class="card question-block mt-3 p-3" id="question-${questionIndex}">
+                    ${deleteButton}
+                    <label>Question:</label>
+                    <input type="text" name="questions[]" class="form-control mb-2" value="${questionValue}" required>
+                    
+                    <label>Points:</label>
+                    <input type="number" name="points[]" class="form-control mb-2" min="1" value="${pointsValue}" required>
+                    
+                    <label>Additional Image (Optional):</label>
+                    ${questionImageHTML}
+                    <input type="file" name="question_images[]" class="form-control mb-2" accept="image/*">
+
+                    <div class="answers">
+                        <label>Answers:</label>
+                        <div class="answer-list" id="answer-list-${questionIndex}"></div>
+                        <button type="button" class="btn btn-sm btn-secondary add-answer" data-question="${questionIndex}">Add Answer</button>
+                    </div>
+
+                    <label>Description of Correct Answer:</label>
+                    <textarea name="descriptions[]" class="form-control mb-2" rows="2" placeholder="Explain why the answer is correct">${descriptionText}</textarea>
+
+                    <label>Image for Description (Optional):</label>
+                    ${descriptionImageHTML}
+                    <input type="file" name="description_images[]" class="form-control mb-3" accept="image/*">
+                </div>
+            `;
+            document.getElementById("questions-container").insertAdjacentHTML("beforeend", questionHtml);
+
+            let answerList = document.getElementById(`answer-list-${questionIndex}`);
+            if(data && data.answers && data.answers.length > 0){
+                data.answers.forEach((answer, i) => {
+                    answerList.insertAdjacentHTML("beforeend", generateAnswerHTML(questionIndex, i, true, answer.answer, answer.correct));
+                });
+                // For new answers, allow user to add more with delete option
+            } else {
+                // Default two answer fields (required)
+                answerList.insertAdjacentHTML("beforeend", generateAnswerHTML(questionIndex, 0, true));
+                answerList.insertAdjacentHTML("beforeend", generateAnswerHTML(questionIndex, 1, true));
+            }
+        }
+
+        function clearQuestions() {
+            document.getElementById("questions-container").innerHTML = '';
+        }
+
+        // Initial load: add one default question with two answers
+        addQuestion(true);
+
+        document.getElementById("add-question").addEventListener("click", function () {
+            addQuestion(false);
+        });
+
+        document.getElementById("questions-container").addEventListener("click", function (event) {
+            if (event.target.classList.contains("delete-question")) {
+                let questionId = event.target.getAttribute("data-id");
+                document.getElementById(questionId).remove();
+            }
+
+            if (event.target.classList.contains("add-answer")) {
+                let questionIndex = event.target.getAttribute("data-question");
+                let answerList = document.getElementById(`answer-list-${questionIndex}`);
+                let answerIndex = answerList.children.length;
+                answerList.insertAdjacentHTML("beforeend", generateAnswerHTML(questionIndex, answerIndex, false));
+            }
+
+            if (event.target.classList.contains("delete-answer")) {
+                event.target.closest(".answer-block").remove();
+            }
+        });
+
+        document.getElementById("quiz-form").addEventListener("submit", function (e) {
+            const questionBlocks = document.querySelectorAll(".question-block");
+            for (let i = 0; i < questionBlocks.length; i++) {
+                const radios = questionBlocks[i].querySelectorAll('input[type="radio"]');
+                const oneChecked = Array.from(radios).some(r => r.checked);
+                if (!oneChecked) {
+                    alert(`Please select a correct answer for Question ${i + 1}`);
+                    e.preventDefault();
+                    return false;
+                }
+            }
+        });
+
+        // Handle existing quiz selection change
+        document.getElementById("existing_quiz").addEventListener("change", function () {
+            let quizId = this.value;
+            if (!quizId) {
+                // Clear form
+                document.getElementById("quiz_name").value = '';
+                document.getElementById("description").value = '';
+                clearQuestions();
+                addQuestion(true);
+                return;
+            }
+
+            fetch(`/api/quiz/${quizId}/data/`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to fetch quiz data.');
+                    return response.json();
+                })
+                .then(data => {
+                    document.getElementById("quiz_name").value = data.quiz_name;
+                    document.getElementById("description").value = data.description;
+                    clearQuestions();
+
+                    if (data.questions.length === 0) {
+                        addQuestion(true);
+                    } else {
+                        data.questions.forEach(q => addQuestion(false, q));
+                    }
+                })
+                .catch(error => {
+                    alert('Error loading quiz data: ' + error.message);
+                });
+        });
+    });
+</script>
+{% endblock %}
+
+
+
+
+
